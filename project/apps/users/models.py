@@ -5,7 +5,12 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class User(AbstractUser):
     is_admin = models.BooleanField(default=False)
-    avatar = models.URLField(max_length=500, null=True, blank=True)
+    avatar = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        default='http://localhost:9000/avatars/default.jpg'
+    )
     phone_number = PhoneNumberField(null=True, blank=True, unique=True)
 
     def __str__(self):
