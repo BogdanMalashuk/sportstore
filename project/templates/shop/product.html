@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — SportStore{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    {% if product.image %}
+      <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm">
+    {% else %}
+      <img src="https://via.placeholder.com/600x400?text=No+Image" class="img-fluid rounded">
+    {% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <h1>{{ product.name }}</h1>
+    <p class="text-muted">{{ product.category.name }}</p>
+    <p>{{ product.description }}</p>
+    <p class="fs-4 fw-bold text-success">{{ product.price }} ₽</p>
+    <p>В наличии: <strong>{{ product.stock }}</strong></p>
+
+    {% if user.is_authenticated %}
+      <button
+        id="cart-toggle-btn"
+        class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %}"
+        data-product-id="{{ product.id }}">
+        {% if in_cart %}Удалить из корзины{% else %}🛒 В корзину{% endif %}
+      </button>
+    {% else %}
+      <a href="{% url 'users:login' %}" class="btn btn-success">Войти для покупки</a>
+    {% endif %}
+  </div>
+</div>
+
+<hr class="my-5">
+
+<section>
+  <h3>Отзывы</h3>
+  {% for r in reviews %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between">
+        <strong>{{ r.user.username }}</strong>
+        <span class="text-warning">{{ r.rating }}/5 ★</span>
+      </div>
+      <p class="mt-2">{{ r.text }}</p>
+      <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">Пока нет отзывов.</p>
+  {% endfor %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('cart-toggle-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const productId = this.dataset.productId;
+    const csrftoken = getCookie('csrftoken');
+
+    fetch(`/cart/toggle/${productId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) return;
+      const cartCount = document.getElementById('cart-count');
+      if (cartCount) {
+        cartCount.innerText = data.cart_item_count > 0 ? `(${data.cart_item_count})` : '';
+      }
+
+      if (data.action === 'added') {
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-danger');
+        btn.textContent = 'Удалить из корзины';
+      } else if (data.action === 'removed') {
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-success');
+        btn.textContent = '🛒 В корзину';
+      }
+    })
+    .catch(err => console.error(err));
+  });
+});
+</script>
+{% endblock %}

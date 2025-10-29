@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, Favorite, CartItem, Order, OrderItem
+from .models import Category, Product, CartItem, Order, OrderItem
 
 
 @admin.register(Category)
@@ -16,7 +16,6 @@ class ProductAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
 
 
-admin.site.register(Favorite)
 admin.site.register(CartItem)
 
 

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ №{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Ваш заказ №{{ order.id }}</h2>
+  <p><strong>Статус:</strong> {{ order.get_status_display }}</p>
+  <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>Товар</th>
+        <th>Количество</th>
+        <th>Цена</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.product.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.buy_price }} ₽</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h4 class="text-end mt-3">Итого: {{ order.total_price }} ₽</h4>
+
+  <div class="text-end mt-4">
+    <a href="{% url 'shop:products' %}" class="btn btn-primary">Вернуться на главную</a>
+  </div>
+</div>
+{% endblock %}
