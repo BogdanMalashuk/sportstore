@@ -11,20 +11,33 @@
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
   <style>
-    /* 🌿 Общий фон и базовые цвета */
-    body {
-      background: linear-gradient(180deg, #f5f9f6 0%, #ffffff 100%);
-      min-height: 100vh;
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* убираем скролл всей страницы */
+      font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background-color: #edf3ed;
+      color: #333;
       display: flex;
       flex-direction: column;
-      color: #333;
-      font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* 🧭 Навигация */
     .navbar {
-      background-color: #28a745 !important; /* основной зелёный */
+      background-color: #28a745 !important;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1030;
+    }
+
+    main {
+      flex: 1;
+      margin-top: 80px; /* отступ под фиксированным хедером */
+      display: flex;
+      height: calc(100vh - 80px);
+      overflow: hidden; /* запрещаем скролл контейнера */
     }
 
     .navbar-brand {
@@ -43,18 +56,11 @@
       text-decoration: underline;
     }
 
-    /* 🛒 Значок корзины */
     #cart-count {
       color: #ff7f50;
       font-weight: 600;
     }
 
-    /* ⚡ Контейнер */
-    .container {
-      flex: 1;
-    }
-
-    /* ⚙️ Футер */
     footer {
       background-color: #1e7b35;
       color: #e9f9ec;
@@ -67,7 +73,6 @@
       margin: 0;
     }
 
-    /* 🌱 Кнопки */
     .btn-primary {
       background-color: #28a745;
       border-color: #28a745;
@@ -88,7 +93,6 @@
       border-color: #ff6330;
     }
 
-    /* 💫 Мелкие улучшения */
     a {
       transition: all 0.2s ease;
     }
@@ -100,7 +104,7 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="{% url 'shop:products' %}">🥦 SportStore</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -129,9 +133,9 @@
     </div>
   </nav>
 
-  <div class="container mb-5">
+  <main class="container mb-5">
     {% block content %}{% endblock %}
-  </div>
+  </main>
 
   <footer class="py-3 mt-auto">
     <div class="container text-center">
@@ -142,7 +146,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-  // Получение CSRF-токена (если нужно)
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

@@ -2,24 +2,24 @@
 {% block title %}Каталог — SportStore{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row" style="height: 100%;">
   <!-- Левая колонка — фильтры -->
-  <div class="col-md-3 mb-4">
-    <div class="card border-0 shadow-sm" style="background-color: #dff5e1;">
+  <div class="col-md-3 mb-4" style="margin-left: -10px;">
+    <div class="card border-0 shadow-sm sidebar-fixed" style="background-color: #dff5e1;">
       <div class="card-header fw-bold" style="background-color: #28a745; color: #fff;">
         Фильтры
       </div>
       <div class="card-body">
 
-        <!-- Поиск -->
         <form method="get" id="filter-form">
+          <!-- Поиск -->
           <div class="mb-3">
             <label for="search" class="form-label fw-semibold">Поиск по названию</label>
             <input type="text" name="q" id="search" class="form-control"
                    placeholder="Введите название..." value="{{ request.GET.q }}">
           </div>
 
-          <!-- Фильтр по цене -->
+          <!-- Цена -->
           <div class="mb-3">
             <label class="form-label fw-semibold">Цена, ₽</label>
             <div class="d-flex gap-2">
@@ -52,7 +52,6 @@
             </ul>
           </div>
 
-          <!-- Кнопка -->
           <div class="d-grid">
             <button type="submit" class="btn fw-bold" style="background-color: #28a745; color: #fff;">
               Применить фильтр
@@ -62,44 +61,82 @@
 
       </div>
     </div>
-
-    {% if user.is_staff %}
-      <div class="d-grid mt-3">
-        <a href="{% url 'shop:product_add' %}" class="btn fw-bold" style="background-color: #ff7f50; color: #fff;">
-          ➕ Добавить товар
-        </a>
-      </div>
-    {% endif %}
   </div>
 
   <!-- Правая колонка — товары -->
-  <div class="col-md-9">
-    <h1 class="mb-4 fw-bold" style="color: #333;">Каталог товаров</h1>
+  <div class="col-md-9 d-flex flex-column" style="height: 100%;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="fw-bold m-0" style="color: #333;">Каталог товаров</h1>
+      {% if user.is_staff %}
+        <a href="{% url 'shop:product_add' %}" class="btn fw-bold" style="background-color: #ff7f50; color: #fff;">
+          ➕ Добавить товар
+        </a>
+      {% endif %}
+    </div>
 
-    <div class="row g-4">
-      {% for p in products %}
-        <div class="col-lg-4 col-md-6">
-          <div class="card h-100 border-0 shadow-sm hover-shadow transition" style="background-color: #fff;">
-            {% if p.image %}
-              <img src="{{ p.image }}" class="card-img-top object-fit-cover" style="height: 200px;" alt="{{ p.name }}">
-            {% else %}
-              <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top object-fit-cover" alt="Нет изображения">
-            {% endif %}
+    <div class="products-scroll flex-grow-1 d-flex flex-column">
+      <div class="row g-4 flex-grow-1">
+        {% for p in products %}
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border-0 shadow-sm hover-shadow transition" style="background-color: #fff;">
+              {% if p.image %}
+                <img src="{{ p.image }}" class="card-img-top object-fit-cover" style="height: 200px;" alt="{{ p.name }}">
+              {% else %}
+                <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top object-fit-cover" alt="Нет изображения">
+              {% endif %}
 
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title fw-semibold" style="color: #28a745;">{{ p.name }}</h5>
-              <p class="text-muted mb-2">{{ p.category.name }}</p>
-              <p class="fw-bold fs-5 mt-auto" style="color: #ff7f50;">{{ p.price }} ₽</p>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title fw-semibold" style="color: #28a745;">{{ p.name }}</h5>
+                <p class="text-muted mb-2">{{ p.category.name }}</p>
+                <p class="fw-bold fs-5 mt-auto" style="color: #ff7f50;">{{ p.price }} ₽</p>
 
-              <a href="{% url 'shop:product' p.pk %}" class="btn mt-3 w-100 fw-bold" style="background-color: #28a745; color: #fff;">
-                Подробнее
-              </a>
+                <a href="{% url 'shop:product' p.pk %}" class="btn mt-3 w-100 fw-bold" style="background-color: #28a745; color: #fff;">
+                  Подробнее
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      {% empty %}
-        <p class="text-muted">Товары не найдены.</p>
-      {% endfor %}
+        {% empty %}
+          <p class="text-muted">Товары не найдены.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Пагинация -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                &laquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -108,22 +145,76 @@
 {% block scripts %}
 <style>
 .hover-shadow:hover {
-    box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1) !important;
-    transform: translateY(-4px);
-    transition: all 0.3s ease;
+  box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1) !important;
+  transition: all 0.3s ease;
 }
 .object-fit-cover {
-    object-fit: cover;
+  object-fit: cover;
 }
 .card-body h5 {
-    font-size: 1.1rem;
+  font-size: 1.1rem;
 }
 input[type="number"], input[type="text"] {
-    border: 1px solid #c7e5c9;
+  border: 1px solid #c7e5c9;
+  border-radius: 0;
 }
 input[type="number"]:focus, input[type="text"]:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.1rem rgba(40,167,69,0.25);
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.1rem rgba(40,167,69,0.25);
+}
+.card, .btn, .form-control {
+  border-radius: 0;
+}
+.sidebar-fixed {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.products-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.products-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.products-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+.products-scroll .card {
+  transition: transform 0.2s ease;
+}
+
+/* === СТИЛИ ДЛЯ ПАГИНАЦИИ === */
+.pagination .page-item .page-link {
+  color: #28a745;
+  border: 1px solid #28a745;
+  border-radius: 0.25rem;
+  margin: 0 2px;
+  transition: all 0.2s ease;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #ff7f50;
+  border-color: #ff7f50;
+  color: #fff;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: #28a745;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #ccc;
+  border-color: #eee;
+  background-color: #f9f9f9;
 }
 </style>
 {% endblock %}

@@ -10,20 +10,41 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 from .forms import ProductForm
+from django.core.paginator import Paginator
 
 
 def products(request):
     qs = Product.objects.select_related('category').all()
     category_slug = request.GET.get('category')
+    search_query = request.GET.get('q', '').strip()
+    price_min = request.GET.get('price_min')
+    price_max = request.GET.get('price_max')
     category = None
     if category_slug:
         category = Category.objects.filter(slug=category_slug).first()
         if category:
             qs = qs.filter(category=category)
+    if search_query:
+        qs = qs.filter(name__icontains=search_query)
+    if price_min:
+        try:
+            qs = qs.filter(price__gte=float(price_min))
+        except ValueError:
+            pass
+    if price_max:
+        try:
+            qs = qs.filter(price__lte=float(price_max))
+        except ValueError:
+            pass
+    paginator = Paginator(qs, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'products': qs,
+        'products': page_obj,
         'category': category,
         'categories': Category.objects.all(),
+        'paginator': paginator,
+        'page_obj': page_obj,
     }
     return render(request, 'shop/products.html', context)
 
