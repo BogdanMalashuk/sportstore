@@ -18,7 +18,12 @@
     <p class="fs-4 fw-bold text-success">{{ product.price }} ₽</p>
     <p>В наличии: <strong>{{ product.stock }}</strong></p>
 
-    {% if user.is_authenticated %}
+    {% if user.is_staff %}
+      <div class="d-flex gap-2 mt-3">
+        <a href="{% url 'shop:product_edit' product.pk %}" class="btn btn-warning w-50">✏️ Редактировать</a>
+        <a href="{% url 'shop:product_delete' product.pk %}" class="btn btn-danger w-50">🗑 Удалить</a>
+      </div>
+    {% elif user.is_authenticated %}
       <button
         id="cart-toggle-btn"
         class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %}"
@@ -36,18 +41,18 @@
 <section>
   <h3>Отзывы</h3>
   {% for r in reviews %}
-  <div class="card mb-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between">
-        <strong>{{ r.user.username }}</strong>
-        <span class="text-warning">{{ r.rating }}/5 ★</span>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <strong>{{ r.user.username }}</strong>
+          <span class="text-warning">{{ r.rating }}/5 ★</span>
+        </div>
+        <p class="mt-2">{{ r.text }}</p>
+        <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
       </div>
-      <p class="mt-2">{{ r.text }}</p>
-      <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
     </div>
-  </div>
   {% empty %}
-  <p class="text-muted">Пока нет отзывов.</p>
+    <p class="text-muted">Пока нет отзывов.</p>
   {% endfor %}
 </section>
 {% endblock %}

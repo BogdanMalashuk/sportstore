@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ view.object|default:"Новый товар" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>
+    {% if view.object %}
+      ✏️ Редактировать товар: {{ view.object.name }}
+    {% else %}
+      ➕ Добавить новый товар
+    {% endif %}
+  </h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">💾 Сохранить</button>
+    <a href="{% url 'shop:products' %}" class="btn btn-secondary">Отмена</a>
+  </form>
+</div>
+{% endblock %}

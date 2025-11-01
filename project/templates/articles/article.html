@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <h1 class="mb-3">{{ article.title }}</h1>
+  <p>{{ article.content|linebreaks }}</p>
+
+  <hr>
+
+  <h4 class="mt-4">Комментарии</h4>
+
+  {# --- Форма добавления комментария --- #}
+  {% if user.is_authenticated %}
+    <form method="post" action="{% url 'articles:comment_create' article.slug %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <textarea name="text" class="form-control" rows="3" placeholder="Ваш комментарий"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Отправить</button>
+    </form>
+  {% else %}
+    <p><a href="{% url 'users:login' %}">Войдите</a>, чтобы оставить комментарий.</p>
+  {% endif %}
+
+  <div class="mt-4">
+    {% for comment in comments %}
+      <div class="mb-3 ps-3 border-start border-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ comment.user.username }}</strong>
+            <small class="text-muted">• {{ comment.created_at|date:"d.m.Y H:i" }}</small>
+          </div>
+
+          {# --- Кнопка удаления комментария для админа --- #}
+          {% if user.is_staff %}
+            <form method="post" action="{% url 'articles:comment_delete' comment.id %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+          {% endif %}
+        </div>
+
+        <div class="mt-1">{{ comment.text|linebreaks }}</div>
+
+        {# --- Ответы на комментарий --- #}
+        {% if comment.replies.all %}
+          <div class="ms-4 mt-3 border-start border-1 ps-3">
+            {% for reply in comment.replies.all %}
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ reply.user.username }}</strong>
+                    <small class="text-muted">• {{ reply.created_at|date:"d.m.Y H:i" }}</small>
+                  </div>
+                  {% if user.is_staff %}
+                    <form method="post" action="{% url 'articles:comment_delete' reply.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <div class="mt-1">{{ reply.text|linebreaks }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {# --- Форма ответа на комментарий --- #}
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'articles:comment_create' article.slug %}" class="mt-2 ms-3">
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+            <div class="input-group">
+              <textarea name="text" class="form-control" rows="1" placeholder="Ответить..."></textarea>
+              <button type="submit" class="btn btn-outline-secondary">Отправить</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>Комментариев пока нет.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

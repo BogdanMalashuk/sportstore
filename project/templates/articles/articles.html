@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Статьи{% endblock %}
+{% block content %}
+
+<h1>Статьи</h1>
+
+{% if user.is_staff %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h5>Создать новую статью</h5>
+    <form method="post" action="{% url 'articles:create' %}">
+      {% csrf_token %}
+      <div class="mb-2">
+        <input type="text" name="title" class="form-control" placeholder="Заголовок">
+      </div>
+      <div class="mb-2">
+        <textarea name="content" class="form-control" rows="4" placeholder="Содержимое"></textarea>
+      </div>
+      <div class="mb-2">
+        <input type="text" name="slug" class="form-control" placeholder="Слаг (пример: protein-guide)">
+      </div>
+      <button type="submit" class="btn btn-success">Создать</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="list-group">
+  {% for article in articles %}
+    <a href="{% url 'articles:article' article.slug %}" class="list-group-item list-group-item-action">
+      <h5>{{ article.title }}</h5>
+      <small class="text-muted">{{ article.created_at|date:"d.m.Y H:i" }}</small>
+    </a>
+  {% empty %}
+    <p>Пока нет статей.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}

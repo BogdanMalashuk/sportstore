@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Заказы — SportStore{% endblock %}
+
+{% block content %}
+<h1>Заказы</h1>
+
+{% if orders %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            {% if user.is_staff %}<th>Пользователь</th>{% endif %}
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Дата</th>
+            {% if not user.is_staff %}<th>Детали</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            {% if user.is_staff %}<td>{{ order.user.username }}</td>{% endif %}
+            <td>{{ order.total_price }} ₽</td>
+            <td>
+                {% if user.is_staff %}
+                <select class="form-select order-status" data-order-id="{{ order.id }}">
+                    {% for value, label in order.STATUS_CHOICES %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                    {{ order.get_status_display }}
+                {% endif %}
+            </td>
+            <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+            {% if not user.is_staff %}
+            <td>
+                <a href="{% url 'shop:order_detail' order.id %}" class="btn btn-sm btn-primary">Смотреть</a>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Заказов пока нет.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if user.is_staff %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selects = document.querySelectorAll('.order-status');
+    selects.forEach(select => {
+        select.addEventListener('change', function () {
+            const orderId = this.dataset.orderId;
+            const status = this.value;
+            const csrftoken = getCookie('csrftoken');
+
+            fetch(`/orders/${orderId}/status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `status=${status}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) alert(data.error);
+            })
+            .catch(err => console.error(err));
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

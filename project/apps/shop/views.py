@@ -6,6 +6,10 @@ from django.views.decorators.http import require_POST
 from django.db.models import F
 from decimal import Decimal
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
+from .forms import ProductForm
 
 
 def products(request):
@@ -27,11 +31,9 @@ def products(request):
 def product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     reviews = product.reviews.select_related('user').all()
-
     in_cart = False
     if request.user.is_authenticated:
         in_cart = CartItem.objects.filter(user=request.user, product=product).exists()
-
     context = {
         'product': product,
         'reviews': reviews,
@@ -139,16 +141,12 @@ def create_order(request):
         selected_ids = request.POST.getlist("selected_items")
         if not selected_ids:
             return redirect("shop:cart")
-
         selected_items = CartItem.objects.filter(id__in=selected_ids, user=request.user).select_related('product')
-
         total_price = sum(item.get_total_price() for item in selected_items)
-
         order = Order.objects.create(
             user=request.user,
             total_price=total_price
         )
-
         for item in selected_items:
             OrderItem.objects.create(
                 order=order,
@@ -156,11 +154,8 @@ def create_order(request):
                 quantity=item.quantity,
                 buy_price=item.product.price
             )
-
         selected_items.delete()
-
         return redirect("shop:order_detail", order_id=order.id)
-
     return redirect("shop:cart")
 
 
@@ -172,3 +167,63 @@ def order_detail(request, order_id):
         "order": order,
         "items": items,
     })
+
+
+class AdminRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_staff
+
+
+class ProductListView(ListView):
+    model = Product
+    template_name = 'shop/products.html'
+    context_object_name = 'products'
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'shop/product.html'
+    context_object_name = 'product'
+
+
+class ProductCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+    model = Product
+    form_class = ProductForm
+    template_name = 'shop/product_form.html'
+    success_url = reverse_lazy('shop:products')
+
+
+class ProductUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = 'shop/product_form.html'
+    success_url = reverse_lazy('shop:products')
+
+
+class ProductDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+    model = Product
+    template_name = 'shop/product_confirm_delete.html'
+    success_url = reverse_lazy('shop:products')
+
+
+@login_required
+def order_list(request):
+    if request.user.is_staff:
+        orders = Order.objects.select_related('user').all().order_by('-created_at')
+    else:
+        orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'shop/orders.html', {'orders': orders})
+
+
+@login_required
+@require_POST
+def change_order_status(request, order_id):
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+    order = get_object_or_404(Order, id=order_id)
+    status = request.POST.get('status')
+    if status not in dict(Order.STATUS_CHOICES):
+        return JsonResponse({'error': 'Invalid status'}, status=400)
+    order.status = status
+    order.save()
+    return JsonResponse({'success': True, 'status': order.get_status_display()})

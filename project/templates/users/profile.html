@@ -1,15 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Профиль — SportStore{% endblock %}
+
 {% block content %}
-<div class="col-md-8 offset-md-2">
-  <h2 class="mb-4">Профиль пользователя</h2>
-  <div class="card">
-    <div class="card-body">
-      <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
-      <p><strong>Email:</strong> {{ user.email }}</p>
-      <p><strong>Телефон:</strong> {{ user.phone_number|default:"—" }}</p>
-      <a href="{% url 'shop:products' %}" class="btn btn-secondary mt-3">Назад в магазин</a>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Профиль пользователя</h2>
+        <a href="{% url 'users:logout' %}" class="btn btn-danger">Выйти</a>
     </div>
-  </div>
+
+    <form action="{% url 'users:profile_update' %}" method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="username" class="form-label">Имя пользователя</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+        </div>
+
+        <hr>
+        <h5>Смена пароля</h5>
+        <div class="mb-3">
+            <label for="current_password" class="form-label">Текущий пароль</label>
+            <input type="password" class="form-control" id="current_password" name="current_password">
+        </div>
+        <div class="mb-3">
+            <label for="new_password" class="form-label">Новый пароль</label>
+            <input type="password" class="form-control" id="new_password" name="new_password">
+        </div>
+        <div class="mb-3">
+            <label for="new_password2" class="form-label">Повтор нового пароля</label>
+            <input type="password" class="form-control" id="new_password2" name="new_password2">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </form>
 </div>
 {% endblock %}

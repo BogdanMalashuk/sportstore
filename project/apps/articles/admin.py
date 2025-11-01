@@ -4,7 +4,7 @@ from .models import Article, Comment
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'created_at')
+    list_display = ('title', 'created_at')
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ('created_at', 'updated_at')
 
