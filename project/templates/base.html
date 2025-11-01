@@ -4,69 +4,161 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}SportStore{% endblock %}</title>
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+  <style>
+    /* 🌿 Общий фон и базовые цвета */
+    body {
+      background: linear-gradient(180deg, #f5f9f6 0%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #333;
+      font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* 🧭 Навигация */
+    .navbar {
+      background-color: #28a745 !important; /* основной зелёный */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-dark .navbar-nav .nav-link {
+      color: #e9f9ec;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .navbar-dark .navbar-nav .nav-link:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    /* 🛒 Значок корзины */
+    #cart-count {
+      color: #ff7f50;
+      font-weight: 600;
+    }
+
+    /* ⚡ Контейнер */
+    .container {
+      flex: 1;
+    }
+
+    /* ⚙️ Футер */
+    footer {
+      background-color: #1e7b35;
+      color: #e9f9ec;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    /* 🌱 Кнопки */
+    .btn-primary {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+
+    .btn-primary:hover {
+      background-color: #23963c;
+      border-color: #23963c;
+    }
+
+    .btn-success {
+      background-color: #ff7f50;
+      border-color: #ff7f50;
+    }
+
+    .btn-success:hover {
+      background-color: #ff6330;
+      border-color: #ff6330;
+    }
+
+    /* 💫 Мелкие улучшения */
+    a {
+      transition: all 0.2s ease;
+    }
+
+    a:hover {
+      color: #28a745;
+    }
+  </style>
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-  <div class="container">
-    <a class="navbar-brand" href="{% url 'shop:products' %}">SportStore</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'shop:products' %}">🥦 SportStore</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="{% url 'shop:products' %}">Каталог</a></li>
-        <li class="nav-item"><a class="nav-link" href="/articles/">Статьи</a></li>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'shop:products' %}">Каталог</a></li>
+          <li class="nav-item"><a class="nav-link" href="/articles/">Статьи</a></li>
 
-        {% if user.is_authenticated %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'shop:cart' %}">
-            🛒 Корзина <span id="cart-count">{% if cart_count > 0 %}({{ cart_count }}){% endif %}</span>
-          </a>
-        </li>
-        <li class="nav-item"><a class="nav-link" href="/users/profile/">Профиль</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'shop:order_list' %}">Заказы</a></li>
-        {% else %}
-        <li class="nav-item"><a class="nav-link" href="/users/login/">Войти</a></li>
-        <li class="nav-item"><a class="nav-link" href="/users/register/">Регистрация</a></li>
-        {% endif %}
-      </ul>
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'shop:cart' %}">
+              🛒 Корзина <span id="cart-count">{% if cart_count > 0 %}({{ cart_count }}){% endif %}</span>
+            </a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/users/profile/">Профиль</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'shop:order_list' %}">Заказы</a></li>
+          {% else %}
+          <li class="nav-item"><a class="nav-link" href="/users/login/">Войти</a></li>
+          <li class="nav-item"><a class="nav-link" href="/users/register/">Регистрация</a></li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
+  </nav>
+
+  <div class="container mb-5">
+    {% block content %}{% endblock %}
   </div>
-</nav>
 
-<div class="container mb-5">
-  {% block content %}{% endblock %}
-</div>
+  <footer class="py-3 mt-auto">
+    <div class="container text-center">
+      <p>© 2025 SportStore — твой источник энергии и здоровья</p>
+    </div>
+  </footer>
 
-<footer class="bg-dark text-white py-3 mt-auto">
-  <div class="container text-center">
-    <p class="mb-0">© 2025 SportStore</p>
-  </div>
-</footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
+  <script>
+  // Получение CSRF-токена (если нужно)
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
       }
     }
+    return cookieValue;
   }
-  return cookieValue;
-}
-</script>
+  </script>
 
-{% block scripts %}{% endblock %}
+  {% block scripts %}{% endblock %}
 </body>
 </html>

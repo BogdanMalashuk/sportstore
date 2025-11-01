@@ -3,29 +3,69 @@
 
 {% block content %}
 <div class="row">
-  <!-- Левая колонка — категории -->
-  <div class="col-md-3">
-    <div class="card mb-3">
-      <div class="card-header bg-primary text-white">
-        Категории
+  <!-- Левая колонка — фильтры -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-0 shadow-sm" style="background-color: #dff5e1;">
+      <div class="card-header fw-bold" style="background-color: #28a745; color: #fff;">
+        Фильтры
       </div>
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item">
-          <a href="{% url 'shop:products' %}" class="text-decoration-none">Все</a>
-        </li>
-        {% for cat in categories %}
-          <li class="list-group-item">
-            <a href="{% url 'shop:products' %}?category={{ cat.slug }}" class="text-decoration-none">
-              {{ cat.name }}
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
+      <div class="card-body">
+
+        <!-- Поиск -->
+        <form method="get" id="filter-form">
+          <div class="mb-3">
+            <label for="search" class="form-label fw-semibold">Поиск по названию</label>
+            <input type="text" name="q" id="search" class="form-control"
+                   placeholder="Введите название..." value="{{ request.GET.q }}">
+          </div>
+
+          <!-- Фильтр по цене -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Цена, ₽</label>
+            <div class="d-flex gap-2">
+              <input type="number" name="price_min" class="form-control" placeholder="от"
+                     value="{{ request.GET.price_min }}">
+              <input type="number" name="price_max" class="form-control" placeholder="до"
+                     value="{{ request.GET.price_max }}">
+            </div>
+          </div>
+
+          <!-- Категории -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Категория</label>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item" style="background-color: #dff5e1;">
+                <label class="form-check-label">
+                  <input type="radio" name="category" value="" class="form-check-input" {% if not request.GET.category %}checked{% endif %}>
+                  Все
+                </label>
+              </li>
+              {% for cat in categories %}
+                <li class="list-group-item" style="background-color: #dff5e1;">
+                  <label class="form-check-label">
+                    <input type="radio" name="category" value="{{ cat.slug }}" class="form-check-input"
+                           {% if request.GET.category == cat.slug %}checked{% endif %}>
+                    {{ cat.name }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <!-- Кнопка -->
+          <div class="d-grid">
+            <button type="submit" class="btn fw-bold" style="background-color: #28a745; color: #fff;">
+              Применить фильтр
+            </button>
+          </div>
+        </form>
+
+      </div>
     </div>
 
     {% if user.is_staff %}
-      <div class="d-grid">
-        <a href="{% url 'shop:product_add' %}" class="btn btn-success">
+      <div class="d-grid mt-3">
+        <a href="{% url 'shop:product_add' %}" class="btn fw-bold" style="background-color: #ff7f50; color: #fff;">
           ➕ Добавить товар
         </a>
       </div>
@@ -34,32 +74,56 @@
 
   <!-- Правая колонка — товары -->
   <div class="col-md-9">
-    <h1 class="mb-4">Каталог</h1>
+    <h1 class="mb-4 fw-bold" style="color: #333;">Каталог товаров</h1>
 
-    <div class="row g-3">
+    <div class="row g-4">
       {% for p in products %}
-        <div class="col-md-4 col-sm-6">
-          <div class="card h-100 shadow-sm">
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100 border-0 shadow-sm hover-shadow transition" style="background-color: #fff;">
             {% if p.image %}
-              <img src="{{ p.image }}" class="card-img-top" alt="{{ p.name }}">
+              <img src="{{ p.image }}" class="card-img-top object-fit-cover" style="height: 200px;" alt="{{ p.name }}">
             {% else %}
-              <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top" alt="Нет изображения">
+              <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top object-fit-cover" alt="Нет изображения">
             {% endif %}
 
             <div class="card-body d-flex flex-column">
-              <h5 class="card-title">{{ p.name }}</h5>
-              <p class="card-text text-muted">{{ p.category.name }}</p>
-              <p class="fw-bold mt-auto">{{ p.price }} ₽</p>
+              <h5 class="card-title fw-semibold" style="color: #28a745;">{{ p.name }}</h5>
+              <p class="text-muted mb-2">{{ p.category.name }}</p>
+              <p class="fw-bold fs-5 mt-auto" style="color: #ff7f50;">{{ p.price }} ₽</p>
 
-              <a href="{% url 'shop:product' p.pk %}" class="btn btn-primary mt-2">Подробнее</a>
-
+              <a href="{% url 'shop:product' p.pk %}" class="btn mt-3 w-100 fw-bold" style="background-color: #28a745; color: #fff;">
+                Подробнее
+              </a>
             </div>
           </div>
         </div>
       {% empty %}
-        <p>Товары не найдены.</p>
+        <p class="text-muted">Товары не найдены.</p>
       {% endfor %}
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1) !important;
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+}
+.object-fit-cover {
+    object-fit: cover;
+}
+.card-body h5 {
+    font-size: 1.1rem;
+}
+input[type="number"], input[type="text"] {
+    border: 1px solid #c7e5c9;
+}
+input[type="number"]:focus, input[type="text"]:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.1rem rgba(40,167,69,0.25);
+}
+</style>
 {% endblock %}
