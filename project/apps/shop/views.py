@@ -36,6 +36,7 @@ def products(request):
             qs = qs.filter(price__lte=float(price_max))
         except ValueError:
             pass
+    qs = qs.order_by('-created_at')
     paginator = Paginator(qs, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -46,6 +47,7 @@ def products(request):
         'paginator': paginator,
         'page_obj': page_obj,
     }
+
     return render(request, 'shop/products.html', context)
 
 
