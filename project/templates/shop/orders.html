@@ -2,50 +2,56 @@
 {% block title %}Заказы — SportStore{% endblock %}
 
 {% block content %}
-<h1>Заказы</h1>
+<div class="container mt-5">
+  <h1 class="fw-bold mb-4" style="color: #333;">Ваши заказы</h1>
 
-{% if orders %}
-<table class="table table-striped">
-    <thead>
+  {% if orders %}
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-header-green">
         <tr>
-            <th>ID</th>
-            {% if user.is_staff %}<th>Пользователь</th>{% endif %}
-            <th>Сумма</th>
-            <th>Статус</th>
-            <th>Дата</th>
-            {% if not user.is_staff %}<th>Детали</th>{% endif %}
+          <th>ID</th>
+          {% if user.is_staff %}<th>Пользователь</th>{% endif %}
+          <th>Сумма</th>
+          <th>Статус</th>
+          <th>Дата</th>
+          {% if not user.is_staff %}<th class="text-center">Подробнее</th>{% endif %}
         </tr>
-    </thead>
-    <tbody>
+      </thead>
+      <tbody>
         {% for order in orders %}
         <tr>
-            <td>{{ order.id }}</td>
-            {% if user.is_staff %}<td>{{ order.user.username }}</td>{% endif %}
-            <td>{{ order.total_price }} ₽</td>
-            <td>
-                {% if user.is_staff %}
-                <select class="form-select order-status" data-order-id="{{ order.id }}">
-                    {% for value, label in order.STATUS_CHOICES %}
-                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                {% else %}
-                    {{ order.get_status_display }}
-                {% endif %}
-            </td>
-            <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
-            {% if not user.is_staff %}
-            <td>
-                <a href="{% url 'shop:order_detail' order.id %}" class="btn btn-sm btn-primary">Смотреть</a>
-            </td>
+          <td class="fw-semibold text-dark">#{{ order.id }}</td>
+          {% if user.is_staff %}<td>{{ order.user.username }}</td>{% endif %}
+          <td>{{ order.total_price }} ₽</td>
+          <td>
+            {% if user.is_staff %}
+              <select class="form-select order-status" data-order-id="{{ order.id }}">
+                {% for value, label in order.STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            {% else %}
+              {{ order.get_status_display }}
             {% endif %}
+          </td>
+          <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+          {% if not user.is_staff %}
+          <td class="text-center">
+            <a href="{% url 'shop:order_detail' order.id %}" class="btn fw-bold btn-outline-fill" style="width: 130px;">
+              <span>Подробнее</span>
+            </a>
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>Заказов пока нет.</p>
-{% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mt-4">Пока нет заказов.</p>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -77,4 +83,69 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endif %}
+
+<style>
+/* === Заголовок таблицы — как у кнопок (зелёный фон, белый текст) === */
+.table-header-green {
+  background-color: #28a745;
+  color: #fff;
+  border-top: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-header-green th {
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* === Общие стили таблицы === */
+.table {
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8fdf9;
+  transition: background-color 0.2s ease;
+}
+
+/* === Кнопка Подробнее (такая же, как в каталоге) === */
+.btn-outline-fill {
+  background-color: #fff;
+  color: #28a745;
+  border: 2px solid #28a745;
+  border-radius: 0; /* прямые углы */
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.btn-outline-fill::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: #28a745;
+  z-index: 0;
+  transition: width 0.3s ease;
+}
+
+.btn-outline-fill:hover::before {
+  width: 100%;
+}
+
+.btn-outline-fill span {
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.btn-outline-fill:hover span {
+  color: #fff;
+}
+</style>
 {% endblock %}
