@@ -90,8 +90,9 @@
                 <p class="text-muted mb-2">{{ p.category.name }}</p>
                 <p class="fw-bold fs-5 mt-auto" style="color: #ff7f50;">{{ p.price }} ₽</p>
 
-                <a href="{% url 'shop:product' p.pk %}" class="btn mt-3 w-100 fw-bold" style="background-color: #28a745; color: #fff;">
-                  Подробнее
+                <!-- Кнопка Подробнее с анимацией -->
+                <a href="{% url 'shop:product' p.pk %}" class="btn mt-3 w-100 fw-bold btn-outline-fill">
+                  <span>Подробнее</span>
                 </a>
               </div>
             </div>
@@ -189,7 +190,43 @@ input[type="number"]:focus, input[type="text"]:focus {
   transition: transform 0.2s ease;
 }
 
-/* === СТИЛИ ДЛЯ ПАГИНАЦИИ === */
+/* === Кнопка Подробнее с анимацией === */
+.btn-outline-fill {
+  background-color: #fff;
+  color: #28a745;
+  border: 2px solid #28a745;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.btn-outline-fill::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: #28a745;
+  z-index: 0;
+  transition: width 0.3s ease;
+}
+
+.btn-outline-fill:hover::before {
+  width: 100%;
+}
+
+.btn-outline-fill span {
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.btn-outline-fill:hover span {
+  color: #fff;
+}
+
+/* === Стили пагинации === */
 .pagination .page-item .page-link {
   color: #28a745;
   border: 1px solid #28a745;
