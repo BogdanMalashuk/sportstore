@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Product, CartItem, Category, Order, OrderItem, Review
@@ -11,6 +13,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 from .forms import ProductForm, ReviewForm
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 
 def products(request):
@@ -51,11 +54,47 @@ def products(request):
     return render(request, 'shop/products.html', context)
 
 
+@login_required
+def add_review_ajax(request, pk):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        product = get_object_or_404(Product, pk=pk)
+        has_ordered = OrderItem.objects.filter(
+            order__user=request.user,
+            product=product,
+            order__status='delivered'
+        ).exists()
+        user_review_exists = Review.objects.filter(user=request.user, product=product).exists()
+        if not has_ordered or user_review_exists:
+            return JsonResponse({'success': False})
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        rating = int(data.get('rating', 0))
+        if text and 1 <= rating <= 5:
+            review = Review.objects.create(
+                user=request.user,
+                product=product,
+                text=text,
+                rating=rating,
+                created_at=timezone.now()
+            )
+            return JsonResponse({
+                'success': True,
+                'username': review.user.username,
+                'text': review.text,
+                'rating': review.rating,
+                'created_at': review.created_at.strftime('%d.%m.%Y %H:%M')
+            })
+
+    return JsonResponse({'success': False})
+
+
 def product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     reviews = product.reviews.select_related('user').all()
     in_cart = False
     can_review = False
+    user_review_exists = False
+
     if request.user.is_authenticated:
         in_cart = CartItem.objects.filter(user=request.user, product=product).exists()
         has_ordered = OrderItem.objects.filter(
@@ -63,21 +102,36 @@ def product(request, pk):
             product=product,
             order__status='delivered'
         ).exists()
-        can_review = has_ordered
-        if request.method == 'POST' and can_review:
-            form = ReviewForm(request.POST)
-            if form.is_valid():
-                Review.objects.create(
-                    user=request.user,
-                    product=product,
-                    text=form.cleaned_data['text'],
-                    rating=form.cleaned_data['rating']
-                )
-                return redirect('shop:product', pk=pk)
-        else:
-            form = ReviewForm()
+        user_review_exists = Review.objects.filter(user=request.user, product=product).exists()
+        can_review = has_ordered and not user_review_exists
+
+        if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if can_review:
+                import json
+                data = json.loads(request.body)
+                text = data.get('text', '').strip()
+                rating = int(data.get('rating', 0))
+                if text and 1 <= rating <= 5:
+                    review = Review.objects.create(
+                        user=request.user,
+                        product=product,
+                        text=text,
+                        rating=rating,
+                        created_at=timezone.now()
+                    )
+                    return JsonResponse({
+                        'success': True,
+                        'username': review.user.username,
+                        'text': review.text,
+                        'rating': review.rating,
+                        'created_at': review.created_at.strftime('%d.%m.%Y %H:%M')
+                    })
+            return JsonResponse({'success': False})
     else:
-        form = None
+        can_review = False
+
+    form = ReviewForm() if can_review else None
+
     context = {
         'product': product,
         'reviews': reviews,

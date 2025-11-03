@@ -21,4 +21,6 @@ urlpatterns = [
 
     path('orders/', views.order_list, name='order_list'),
     path('orders/<int:order_id>/status/', views.change_order_status, name='change_order_status'),
+
+    path('reviews/add/<int:pk>/', views.add_review_ajax, name='add_review_ajax'),
 ]

@@ -2,20 +2,20 @@
 {% block title %}{{ product.name }} — SportStore{% endblock %}
 
 {% block content %}
-<div class="container my-5">
+<div class="container product-page my-5">
   <div class="row g-4">
     <!-- Левая колонка: изображение товара -->
     <div class="col-lg-6 text-center">
       {% if product.image %}
         <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm">
       {% else %}
-        <img src="https://via.placeholder.com/600x400?text=No+Image" class="img-fluid rounded shadow-sm">
+        <img src="https://via.placeholder.com/600x400?text=No+Image" alt="{{ product.name }}" class="img-fluid rounded shadow-sm">
       {% endif %}
     </div>
 
     <!-- Правая колонка: характеристики -->
     <div class="col-lg-6">
-      <div class="product-info-card p-4 bg-white rounded shadow-sm">
+      <div class="product-info-card">
         <h1 class="fw-bold">{{ product.name }}</h1>
         <p class="text-muted mb-1">{{ product.category.name }}</p>
         <p class="fs-4 fw-bold text-success">{{ product.price }} ₽</p>
@@ -29,10 +29,7 @@
             <a href="{% url 'shop:product_delete' product.pk %}" class="btn btn-danger w-50">🗑 Удалить</a>
           </div>
         {% elif user.is_authenticated %}
-          <button
-            id="cart-toggle-btn"
-            class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %} w-100 mt-3"
-            data-product-id="{{ product.id }}">
+          <button id="cart-toggle-btn" class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %} w-100 mt-3" data-product-id="{{ product.id }}">
             {% if in_cart %}Удалить из корзины{% else %}🛒 В корзину{% endif %}
           </button>
         {% else %}
@@ -48,16 +45,22 @@
 
     <!-- Форма добавления отзыва -->
     {% if can_review %}
-      <div class="card p-3 mb-4 shadow-sm">
-        <form method="post">
+      <div class="review-card mb-4 p-3" id="review-form-card">
+        <form id="review-form" method="post">
           {% csrf_token %}
           <div class="mb-2">
             {{ form.text }}
           </div>
           <div class="mb-2">
-            {{ form.rating }}
+            <!-- Звёздный рейтинг -->
+            <div class="star-rating" id="star-rating">
+              {% for i in "12345" %}
+                <span class="star" data-value="{{ forloop.counter }}">★</span>
+              {% endfor %}
+              <input type="hidden" name="rating" id="rating-input" value="0">
+            </div>
           </div>
-          <button type="submit" class="btn btn-success">Отправить отзыв</button>
+          <button type="submit" class="btn btn-success mt-2">Отправить отзыв</button>
         </form>
       </div>
     {% else %}
@@ -68,18 +71,20 @@
       {% endif %}
     {% endif %}
 
-    <div class="row g-3">
+    <div class="row g-3" id="reviews-list">
       {% for r in reviews %}
         <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>{{ r.user.username }}</strong>
-                <span class="text-warning">{{ r.rating }}/5 ★</span>
-              </div>
-              <p>{{ r.text }}</p>
-              <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
+          <div class="review-card h-100 p-3">
+            <div class="d-flex justify-content-between mb-2">
+              <strong>{{ r.user.username }}</strong>
+              <span class="text-warning">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}
+                {% endfor %}
+              </span>
             </div>
+            <p>{{ r.text }}</p>
+            <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
           </div>
         </div>
       {% empty %}
@@ -90,27 +95,39 @@
 </div>
 
 <style>
-  .product-info-card {
-    border: 1px solid #e0e0e0;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
+.product-page { padding: 3rem 0; }
+.product-info-card {
+  background-color: #ffffff; border-radius: 10px; padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.product-info-card:hover { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); }
+.product-page img { max-height: 400px; width: 100%; object-fit: contain; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease; }
+.product-info-card h1 { font-weight: 700; margin-bottom: 0.5rem; }
+.product-info-card p.text-muted { font-size: 0.95rem; margin-bottom: 1rem; }
+.product-info-card p.fs-4 { margin-bottom: 1rem; }
+.product-info-card .btn { border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.product-info-card .btn-success:hover { background-color: #ff6330; border-color: #ff6330; }
+.product-info-card .btn-danger:hover { background-color: #cc2e00; border-color: #cc2e00; }
+.product-info-card .btn-warning:hover { background-color: #e6b800; border-color: #e6b800; }
 
-  .product-info-card:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-
-  .img-fluid {
-    max-height: 500px;
-    object-fit: contain;
-  }
-
-  /* Форма отзыва */
-  .card form input, .card form textarea, .card form select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-  }
+.product-page section h3 { margin-bottom: 1.5rem; }
+.product-page .review-card {
+  background-color: #ffffff; border-radius: 10px; padding: 1rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.product-page .review-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+.product-page .review-card .text-warning { font-weight: 600; letter-spacing: 2px; }
+.product-page .review-card small { font-size: 0.8rem; color: #6c757d; }
+.star-rating { font-size: 1.5rem; display: inline-block; }
+.star-rating .star { cursor: pointer; color: #ccc; transition: color 0.2s; margin-right: 2px; }
+.star-rating .star.filled { color: #ffcc00; }
+.product-page .review-card form input,
+.product-page .review-card form textarea { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ced4da; margin-bottom: 0.5rem; font-size: 0.95rem; }
+.product-page .review-card form button { border-radius: 6px; }
+.product-page .fw-bold { font-weight: 600; }
+.product-page .text-success { color: #28a745 !important; }
 </style>
 {% endblock %}
 
@@ -118,41 +135,115 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const btn = document.getElementById('cart-toggle-btn');
-  if (!btn) return;
+  if (btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const productId = this.dataset.productId;
+      const csrftoken = getCookie('csrftoken');
+      fetch(`/cart/toggle/${productId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return;
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) cartCount.innerText = data.cart_item_count > 0 ? `(${data.cart_item_count})` : '';
+        if (data.action === 'added') { btn.classList.replace('btn-success', 'btn-danger'); btn.textContent = 'Удалить из корзины'; }
+        else if (data.action === 'removed') { btn.classList.replace('btn-danger', 'btn-success'); btn.textContent = '🛒 В корзину'; }
+      }).catch(err => console.error(err));
+    });
+  }
 
-  btn.addEventListener('click', function (e) {
-    e.preventDefault();
-    const productId = this.dataset.productId;
-    const csrftoken = getCookie('csrftoken');
-
-    fetch(`/cart/toggle/${productId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrftoken,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({})
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) return;
-      const cartCount = document.getElementById('cart-count');
-      if (cartCount) {
-        cartCount.innerText = data.cart_item_count > 0 ? `(${data.cart_item_count})` : '';
-      }
-
-      if (data.action === 'added') {
-        btn.classList.remove('btn-success');
-        btn.classList.add('btn-danger');
-        btn.textContent = 'Удалить из корзины';
-      } else if (data.action === 'removed') {
-        btn.classList.remove('btn-danger');
-        btn.classList.add('btn-success');
-        btn.textContent = '🛒 В корзину';
-      }
-    })
-    .catch(err => console.error(err));
+  // --- Звёздный рейтинг ---
+  const stars = document.querySelectorAll('#star-rating .star');
+  const ratingInput = document.getElementById('rating-input');
+  let selectedRating = 0;
+  stars.forEach((star, index) => {
+    star.addEventListener('mouseover', () => { stars.forEach((s,i) => s.classList.toggle('filled', i <= index)); });
+    star.addEventListener('mouseout', () => { stars.forEach((s,i) => s.classList.toggle('filled', i < selectedRating)); });
+    star.addEventListener('click', () => { selectedRating = index + 1; ratingInput.value = selectedRating; stars.forEach((s,i) => s.classList.toggle('filled', i < selectedRating)); });
   });
+
+  // --- AJAX отправка отзыва ---
+  const reviewForm = document.getElementById('review-form');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const csrftoken = getCookie('csrftoken');
+      const text = this.querySelector('textarea[name="text"]').value;
+      const rating = parseInt(ratingInput.value);
+      const productId = "{{ product.id }}";
+
+      fetch(`/reviews/add/${productId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ text, rating })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return;
+
+        // скрываем форму
+        document.getElementById('review-form-card').style.display = 'none';
+
+        // создаём новый отзыв с правильными звёздами
+        const reviewsList = document.getElementById('reviews-list');
+        const colDiv = document.createElement('div');
+        colDiv.classList.add('col-md-6');
+
+        const reviewDiv = document.createElement('div');
+        reviewDiv.classList.add('review-card', 'h-100', 'p-3');
+
+        // верхний блок с юзером и звёздами
+        const topDiv = document.createElement('div');
+        topDiv.classList.add('d-flex', 'justify-content-between', 'mb-2');
+
+        const usernameStrong = document.createElement('strong');
+        usernameStrong.textContent = data.username;
+
+        const starsSpan = document.createElement('span');
+        starsSpan.classList.add('text-warning');
+        for (let i = 1; i <= 5; i++) {
+          const star = document.createElement('span');
+          star.classList.add('star');
+          star.textContent = i <= data.rating ? '★' : '☆';
+          starsSpan.appendChild(star);
+        }
+
+        topDiv.appendChild(usernameStrong);
+        topDiv.appendChild(starsSpan);
+
+        const textP = document.createElement('p');
+        textP.textContent = data.text;
+
+        const createdSmall = document.createElement('small');
+        createdSmall.classList.add('text-muted');
+        createdSmall.textContent = data.created_at;
+
+        reviewDiv.appendChild(topDiv);
+        reviewDiv.appendChild(textP);
+        reviewDiv.appendChild(createdSmall);
+
+        colDiv.appendChild(reviewDiv);
+        reviewsList.prepend(colDiv);
+      })
+      .catch(err => console.error(err));
+    });
+  }
 });
+
+// --- CSRF ---
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    document.cookie.split(';').forEach(cookie => {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+    });
+  }
+  return cookieValue;
+}
 </script>
 {% endblock %}
