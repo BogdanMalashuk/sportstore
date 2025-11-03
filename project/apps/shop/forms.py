@@ -14,3 +14,17 @@ class ProductForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-select'}),
             'image': forms.URLInput(attrs={'class': 'form-control'}),
         }
+
+
+class ReviewForm(forms.Form):
+    text = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Ваш отзыв...'}),
+        label='',
+        max_length=1000
+    )
+    rating = forms.IntegerField(
+        min_value=1,
+        max_value=5,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Оценка 1-5'}),
+        label=''
+    )

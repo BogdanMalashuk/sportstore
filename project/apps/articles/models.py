@@ -1,6 +1,6 @@
 from django.db import models
 from apps.users.models import User
-from apps.reviews.models import Like
+from apps.shop.models import Like
 
 
 class Article(models.Model):

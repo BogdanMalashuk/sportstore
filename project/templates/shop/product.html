@@ -45,6 +45,29 @@
   <!-- Блок отзывов -->
   <section class="mt-5">
     <h3 class="mb-4">Отзывы</h3>
+
+    <!-- Форма добавления отзыва -->
+    {% if can_review %}
+      <div class="card p-3 mb-4 shadow-sm">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-2">
+            {{ form.text }}
+          </div>
+          <div class="mb-2">
+            {{ form.rating }}
+          </div>
+          <button type="submit" class="btn btn-success">Отправить отзыв</button>
+        </form>
+      </div>
+    {% else %}
+      {% if user.is_authenticated %}
+        <p class="text-muted">Вы можете оставить отзыв после покупки этого товара.</p>
+      {% else %}
+        <p class="text-muted">Войдите, чтобы оставить отзыв.</p>
+      {% endif %}
+    {% endif %}
+
     <div class="row g-3">
       {% for r in reviews %}
         <div class="col-md-6">
@@ -79,6 +102,14 @@
   .img-fluid {
     max-height: 500px;
     object-fit: contain;
+  }
+
+  /* Форма отзыва */
+  .card form input, .card form textarea, .card form select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
   }
 </style>
 {% endblock %}

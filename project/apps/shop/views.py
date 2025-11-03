@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Product, CartItem, Category, Order, OrderItem
+from .models import Product, CartItem, Category, Order, OrderItem, Review
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import F
@@ -9,7 +9,7 @@ from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
-from .forms import ProductForm
+from .forms import ProductForm, ReviewForm
 from django.core.paginator import Paginator
 
 
@@ -53,12 +53,35 @@ def product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     reviews = product.reviews.select_related('user').all()
     in_cart = False
+    can_review = False
     if request.user.is_authenticated:
         in_cart = CartItem.objects.filter(user=request.user, product=product).exists()
+        has_ordered = OrderItem.objects.filter(
+            order__user=request.user,
+            product=product,
+            order__status='delivered'
+        ).exists()
+        can_review = has_ordered
+        if request.method == 'POST' and can_review:
+            form = ReviewForm(request.POST)
+            if form.is_valid():
+                Review.objects.create(
+                    user=request.user,
+                    product=product,
+                    text=form.cleaned_data['text'],
+                    rating=form.cleaned_data['rating']
+                )
+                return redirect('shop:product', pk=pk)
+        else:
+            form = ReviewForm()
+    else:
+        form = None
     context = {
         'product': product,
         'reviews': reviews,
         'in_cart': in_cart,
+        'can_review': can_review,
+        'form': form,
     }
     return render(request, 'shop/product.html', context)
 

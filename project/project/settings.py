@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'phonenumber_field',
     'apps.articles',
-    'apps.reviews',
     'apps.users',
     'apps.shop',
 ]
@@ -82,7 +81,7 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sportstore',
+        'NAME': 'nutristore',
         'USER': 'bogdan',
         'PASSWORD': 'bogdan',
         'HOST': 'localhost',
