@@ -2,20 +2,34 @@
 {% block title %}{{ view.object|default:"Новый товар" }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2>
-    {% if view.object %}
-      ✏️ Редактировать товар: {{ view.object.name }}
-    {% else %}
-      ➕ Добавить новый товар
-    {% endif %}
-  </h2>
+<div class="scrollable-page">
+  <div class="container mt-4">
+    <h2>
+      {% if view.object %}
+        ✏️ Редактировать товар: {{ view.object.name }}
+      {% else %}
+        ➕ Добавить новый товар
+      {% endif %}
+    </h2>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">💾 Сохранить</button>
-    <a href="{% url 'shop:products' %}" class="btn btn-secondary">Отмена</a>
-  </form>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-success">💾 Сохранить</button>
+      <a href="{% url 'shop:products' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+  </div>
 </div>
+
+<style>
+  /* Контейнер с внутренним скроллом */
+  .scrollable-page {
+    flex: 1; /* чтобы занять доступную высоту main */
+    overflow-y: auto; /* включаем вертикальный скролл */
+    padding: 20px 0; /* отступы сверху/снизу */
+  }
+
+  /* Если main в base имеет display: flex и height: calc(100vh - 80px),
+     то этот блок будет скроллиться независимо от остальной страницы */
+</style>
 {% endblock %}
