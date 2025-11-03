@@ -2,59 +2,85 @@
 {% block title %}{{ product.name }} — SportStore{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-6">
-    {% if product.image %}
-      <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm">
-    {% else %}
-      <img src="https://via.placeholder.com/600x400?text=No+Image" class="img-fluid rounded">
-    {% endif %}
-  </div>
+<div class="container my-5">
+  <div class="row g-4">
+    <!-- Левая колонка: изображение товара -->
+    <div class="col-lg-6 text-center">
+      {% if product.image %}
+        <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm">
+      {% else %}
+        <img src="https://via.placeholder.com/600x400?text=No+Image" class="img-fluid rounded shadow-sm">
+      {% endif %}
+    </div>
 
-  <div class="col-md-6">
-    <h1>{{ product.name }}</h1>
-    <p class="text-muted">{{ product.category.name }}</p>
-    <p>{{ product.description }}</p>
-    <p class="fs-4 fw-bold text-success">{{ product.price }} ₽</p>
-    <p>В наличии: <strong>{{ product.stock }}</strong></p>
+    <!-- Правая колонка: характеристики -->
+    <div class="col-lg-6">
+      <div class="product-info-card p-4 bg-white rounded shadow-sm">
+        <h1 class="fw-bold">{{ product.name }}</h1>
+        <p class="text-muted mb-1">{{ product.category.name }}</p>
+        <p class="fs-4 fw-bold text-success">{{ product.price }} ₽</p>
+        <p>В наличии: <strong>{{ product.stock }}</strong></p>
+        <hr>
+        <p>{{ product.description }}</p>
 
-    {% if user.is_staff %}
-      <div class="d-flex gap-2 mt-3">
-        <a href="{% url 'shop:product_edit' product.pk %}" class="btn btn-warning w-50">✏️ Редактировать</a>
-        <a href="{% url 'shop:product_delete' product.pk %}" class="btn btn-danger w-50">🗑 Удалить</a>
-      </div>
-    {% elif user.is_authenticated %}
-      <button
-        id="cart-toggle-btn"
-        class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %}"
-        data-product-id="{{ product.id }}">
-        {% if in_cart %}Удалить из корзины{% else %}🛒 В корзину{% endif %}
-      </button>
-    {% else %}
-      <a href="{% url 'users:login' %}" class="btn btn-success">Войти для покупки</a>
-    {% endif %}
-  </div>
-</div>
-
-<hr class="my-5">
-
-<section>
-  <h3>Отзывы</h3>
-  {% for r in reviews %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <strong>{{ r.user.username }}</strong>
-          <span class="text-warning">{{ r.rating }}/5 ★</span>
-        </div>
-        <p class="mt-2">{{ r.text }}</p>
-        <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
+        {% if user.is_staff %}
+          <div class="d-flex gap-2 mt-3">
+            <a href="{% url 'shop:product_edit' product.pk %}" class="btn btn-warning w-50">✏️ Редактировать</a>
+            <a href="{% url 'shop:product_delete' product.pk %}" class="btn btn-danger w-50">🗑 Удалить</a>
+          </div>
+        {% elif user.is_authenticated %}
+          <button
+            id="cart-toggle-btn"
+            class="btn {% if in_cart %}btn-danger{% else %}btn-success{% endif %} w-100 mt-3"
+            data-product-id="{{ product.id }}">
+            {% if in_cart %}Удалить из корзины{% else %}🛒 В корзину{% endif %}
+          </button>
+        {% else %}
+          <a href="{% url 'users:login' %}" class="btn btn-success w-100 mt-3">Войти для покупки</a>
+        {% endif %}
       </div>
     </div>
-  {% empty %}
-    <p class="text-muted">Пока нет отзывов.</p>
-  {% endfor %}
-</section>
+  </div>
+
+  <!-- Блок отзывов -->
+  <section class="mt-5">
+    <h3 class="mb-4">Отзывы</h3>
+    <div class="row g-3">
+      {% for r in reviews %}
+        <div class="col-md-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>{{ r.user.username }}</strong>
+                <span class="text-warning">{{ r.rating }}/5 ★</span>
+              </div>
+              <p>{{ r.text }}</p>
+              <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-muted">Пока нет отзывов.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<style>
+  .product-info-card {
+    border: 1px solid #e0e0e0;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .product-info-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  .img-fluid {
+    max-height: 500px;
+    object-fit: contain;
+  }
+</style>
 {% endblock %}
 
 {% block scripts %}
