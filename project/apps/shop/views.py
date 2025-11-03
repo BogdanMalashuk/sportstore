@@ -1,5 +1,4 @@
 import json
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Product, CartItem, Category, Order, OrderItem, Review
@@ -23,6 +22,7 @@ def products(request):
     search_query = request.GET.get('q', '').strip()
     price_min = request.GET.get('price_min')
     price_max = request.GET.get('price_max')
+    sort = request.GET.get('sort', '')
     category = None
     if category_slug:
         category = Category.objects.filter(slug=category_slug).first()
@@ -40,18 +40,28 @@ def products(request):
             qs = qs.filter(price__lte=float(price_max))
         except ValueError:
             pass
-    qs = qs.order_by('-created_at')
+    if sort == 'latest':
+        qs = qs.order_by('-created_at')
+    elif sort == 'best_reviews':
+        qs = qs.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating', '-created_at')
+    elif sort == 'price_desc':
+        qs = qs.order_by('-price')
+    elif sort == 'price_asc':
+        qs = qs.order_by('price')
+    else:
+        qs = qs.order_by('-created_at')
     paginator = Paginator(qs, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
     context = {
         'products': page_obj,
         'category': category,
         'categories': Category.objects.all(),
         'paginator': paginator,
         'page_obj': page_obj,
+        'sort': sort,
     }
-
     return render(request, 'shop/products.html', context)
 
 
