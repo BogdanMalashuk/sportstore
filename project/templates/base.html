@@ -46,12 +46,13 @@
     .navbar-dark .navbar-nav .nav-link {
       color: #e9f9ec;
       font-weight: 500;
-      transition: color 0.2s ease;
+      transition: transform 0.2s ease, color 0.2s ease;
     }
 
     .navbar-dark .navbar-nav .nav-link:hover {
       color: #ffffff;
-      text-decoration: underline;
+      transform: scale(1.05); /* легкое увеличение */
+      text-decoration: none;   /* убираем подчеркивание */
     }
 
     #cart-count {
