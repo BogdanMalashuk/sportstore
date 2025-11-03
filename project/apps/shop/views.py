@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Product, CartItem, Category, Order, OrderItem, Review
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db.models import F
+from django.db.models import F, Avg
 from decimal import Decimal
 from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -14,6 +14,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView, D
 from .forms import ProductForm, ReviewForm
 from django.core.paginator import Paginator
 from django.utils import timezone
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 def products(request):
@@ -131,15 +132,27 @@ def product(request, pk):
         can_review = False
 
     form = ReviewForm() if can_review else None
-
+    avg_rating = reviews.aggregate(avg=Avg('rating'))['avg']
+    avg_rating = round(avg_rating or 0, 1)
     context = {
         'product': product,
         'reviews': reviews,
         'in_cart': in_cart,
         'can_review': can_review,
         'form': form,
+        'avg_rating': avg_rating,
     }
     return render(request, 'shop/product.html', context)
+
+
+@staff_member_required
+def delete_review(request, review_id):
+    if request.method == 'POST':
+        review = Review.objects.filter(id=review_id).first()
+        if review:
+            review.delete()
+            return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 
 @login_required
