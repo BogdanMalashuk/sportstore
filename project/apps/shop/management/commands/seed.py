@@ -109,7 +109,6 @@ class Command(BaseCommand):
                     name=name,
                     description=desc,
                     price=random.randint(1000, 6000),
-                    stock=random.randint(10, 80),
                     category=category,
                 )
                 products.append(product)
