@@ -1,6 +1,6 @@
 from django.views.generic import ListView, DetailView
 from django.views import View
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Article, Comment
@@ -21,14 +21,21 @@ class ArticleListView(ListView):
 
 
 class ArticleCreateView(UserPassesTestMixin, View):
+    template_name = "articles/article_form.html"
+
     def test_func(self):
         return self.request.user.is_staff
+
+    def get(self, request):
+        form = ArticleForm()
+        return render(request, self.template_name, {"form": form})
 
     def post(self, request):
         form = ArticleForm(request.POST)
         if form.is_valid():
             form.save()
-        return redirect('articles:articles')
+            return redirect("articles:articles")
+        return render(request, self.template_name, {"form": form})
 
 
 class ArticleDetailView(DetailView):
