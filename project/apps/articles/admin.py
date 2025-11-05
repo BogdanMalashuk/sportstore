@@ -11,5 +11,5 @@ class ArticleAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'article', 'parent', 'created_at')
+    list_display = ('user', 'article', 'created_at')
     search_fields = ('user__username', 'article__title')

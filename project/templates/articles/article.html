@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="container mt-4">
-
   <h1 class="mb-3">{{ article.title }}</h1>
   <p>{{ article.content|linebreaks }}</p>
 
@@ -12,7 +11,7 @@
   <h4 class="mt-4">Комментарии</h4>
 
   {% if user.is_authenticated %}
-    <form id="comment-form" method="post" data-article="{{ article.slug }}">
+    <form id="comment-form">
       {% csrf_token %}
       <div class="mb-3">
         <textarea id="comment-text" name="text" class="form-control" rows="3" placeholder="Ваш комментарий"></textarea>
@@ -26,116 +25,44 @@
   <div id="comments-container" class="mt-4">
     {% include "articles/comments.html" %}
   </div>
-
 </div>
 
 <style>
-.comment {
-  border-left: 3px solid #28a745;
-  padding-left: 12px;
-  margin-bottom: 1rem;
-}
-.reply {
-  margin-left: 1.5rem;
-  border-left: 2px solid #ccc;
-  padding-left: 10px;
-}
-.comment small {
-  color: #666;
-}
-.comment .reply-btn {
-  font-size: 0.9rem;
-  color: #007bff;
-  cursor: pointer;
-}
-.comment .reply-btn:hover {
-  text-decoration: underline;
-}
-.reply-form {
-  margin-top: 8px;
-}
+#comments-container { background-color:#fff; border:1px solid #ddd; border-radius:8px; padding:16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+.comment { border-left:4px solid #28a745; padding:12px; margin-bottom:1rem; background-color:#f9f9f9; border-radius:6px; transition:background-color 0.2s ease;}
+.comment:hover { background-color:#f1f8f4; }
+.comment small { color:#666; }
+textarea.form-control { resize: vertical; }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-  // --- Основная форма добавления комментария ---
   const commentForm = document.getElementById('comment-form');
-  if (commentForm) {
+
+  if(commentForm){
     commentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = document.getElementById('comment-text').value.trim();
-      if (!text) return;
+      if(!text) return;
 
-      const response = await fetch(commentForm.dataset.article + '/comment/', {
+      const url = "{% url 'articles:comment_create' article.slug %}";
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'X-CSRFToken': csrftoken,
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: new URLSearchParams({ text })
       });
 
-      if (response.ok) {
+      if(response.ok){
         const html = await response.text();
         document.getElementById('comments-container').innerHTML = html;
         document.getElementById('comment-text').value = '';
       }
     });
-  }
-
-  // --- Делегирование кликов на кнопки "Ответить" ---
-  document.body.addEventListener('click', (e) => {
-    if (e.target.classList.contains('reply-btn')) {
-      const commentId = e.target.dataset.comment;
-      toggleReplyForm(commentId);
-    }
-  });
-
-  // --- Обработка отправки формы ответа ---
-  document.body.addEventListener('submit', async (e) => {
-    if (e.target.classList.contains('reply-form')) {
-      e.preventDefault();
-
-      const form = e.target;
-      const text = form.querySelector('textarea').value.trim();
-      const parentId = form.querySelector('[name=parent_id]').value;
-      if (!text) return;
-
-      const response = await fetch(form.action, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrftoken,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({ text, parent_id: parentId })
-      });
-
-      if (response.ok) {
-        const html = await response.text();
-        document.getElementById('comments-container').innerHTML = html;
-      }
-    }
-  });
-
-  // --- Функция открытия / закрытия формы ответа ---
-  function toggleReplyForm(commentId) {
-    const container = document.getElementById('reply-container-' + commentId);
-    if (container.innerHTML.trim()) {
-      container.innerHTML = ''; // скрыть
-      return;
-    }
-    container.innerHTML = `
-      <form method="post" action="${window.location.pathname}comment/" class="reply-form">
-        <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
-        <input type="hidden" name="parent_id" value="${commentId}">
-        <div class="input-group mt-2">
-          <textarea name="text" class="form-control" rows="1" placeholder="Ваш ответ..."></textarea>
-          <button type="submit" class="btn btn-outline-success">↩️</button>
-        </div>
-      </form>
-    `;
   }
 });
 </script>

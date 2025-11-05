@@ -17,9 +17,5 @@ class Article(models.Model):
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def is_reply(self):
-        return self.parent is not None

@@ -48,29 +48,26 @@ class ArticleDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         article = self.get_object()
-        context['comments'] = article.comments.filter(parent__isnull=True)
+        context['comments'] = article.comments.all()
         return context
 
 
 class CommentCreateView(LoginRequiredMixin, View):
     def post(self, request, slug):
         article = get_object_or_404(Article, slug=slug)
-        parent_id = request.POST.get('parent_id')
         text = request.POST.get('text')
         if text:
-            Comment.objects.create(
-                user=request.user,
-                article=article,
-                text=text,
-                parent_id=parent_id if parent_id else None
-            )
+            Comment.objects.create(user=request.user, article=article, text=text)
+
+        # AJAX
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             html = render_to_string(
                 'articles/comments.html',
-                {'comments': article.comments.filter(parent__isnull=True)},
+                {'comments': article.comments.all()},
                 request=request
             )
             return HttpResponse(html)
+
         return redirect(reverse('articles:article', args=[slug]))
 
 
@@ -82,12 +79,14 @@ class CommentDeleteView(UserPassesTestMixin, View):
         comment = get_object_or_404(Comment, pk=pk)
         article_slug = comment.article.slug
         comment.delete()
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             article = get_object_or_404(Article, slug=article_slug)
             html = render_to_string(
                 'articles/comments.html',
-                {'comments': article.comments.filter(parent__isnull=True)},
+                {'comments': article.comments.all()},
                 request=request
             )
             return HttpResponse(html)
+
         return redirect(reverse('articles:article', args=[article_slug]))
