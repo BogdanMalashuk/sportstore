@@ -11,77 +11,132 @@
 
   <h4 class="mt-4">Комментарии</h4>
 
-  {# --- Форма добавления комментария --- #}
   {% if user.is_authenticated %}
-    <form method="post" action="{% url 'articles:comment_create' article.slug %}">
+    <form id="comment-form" method="post" data-article="{{ article.slug }}">
       {% csrf_token %}
       <div class="mb-3">
-        <textarea name="text" class="form-control" rows="3" placeholder="Ваш комментарий"></textarea>
+        <textarea id="comment-text" name="text" class="form-control" rows="3" placeholder="Ваш комментарий"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Отправить</button>
+      <button type="submit" class="btn btn-success">💬 Отправить</button>
     </form>
   {% else %}
     <p><a href="{% url 'users:login' %}">Войдите</a>, чтобы оставить комментарий.</p>
   {% endif %}
 
-  <div class="mt-4">
-    {% for comment in comments %}
-      <div class="mb-3 ps-3 border-start border-2">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <strong>{{ comment.user.username }}</strong>
-            <small class="text-muted">• {{ comment.created_at|date:"d.m.Y H:i" }}</small>
-          </div>
-
-          {# --- Кнопка удаления комментария для админа --- #}
-          {% if user.is_staff %}
-            <form method="post" action="{% url 'articles:comment_delete' comment.id %}" class="d-inline">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
-            </form>
-          {% endif %}
-        </div>
-
-        <div class="mt-1">{{ comment.text|linebreaks }}</div>
-
-        {# --- Ответы на комментарий --- #}
-        {% if comment.replies.all %}
-          <div class="ms-4 mt-3 border-start border-1 ps-3">
-            {% for reply in comment.replies.all %}
-              <div class="mb-2">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>{{ reply.user.username }}</strong>
-                    <small class="text-muted">• {{ reply.created_at|date:"d.m.Y H:i" }}</small>
-                  </div>
-                  {% if user.is_staff %}
-                    <form method="post" action="{% url 'articles:comment_delete' reply.id %}" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
-                    </form>
-                  {% endif %}
-                </div>
-                <div class="mt-1">{{ reply.text|linebreaks }}</div>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-
-        {# --- Форма ответа на комментарий --- #}
-        {% if user.is_authenticated %}
-          <form method="post" action="{% url 'articles:comment_create' article.slug %}" class="mt-2 ms-3">
-            {% csrf_token %}
-            <input type="hidden" name="parent_id" value="{{ comment.id }}">
-            <div class="input-group">
-              <textarea name="text" class="form-control" rows="1" placeholder="Ответить..."></textarea>
-              <button type="submit" class="btn btn-outline-secondary">Отправить</button>
-            </div>
-          </form>
-        {% endif %}
-      </div>
-    {% empty %}
-      <p>Комментариев пока нет.</p>
-    {% endfor %}
+  <div id="comments-container" class="mt-4">
+    {% include "articles/comments.html" %}
   </div>
+
 </div>
+
+<style>
+.comment {
+  border-left: 3px solid #28a745;
+  padding-left: 12px;
+  margin-bottom: 1rem;
+}
+.reply {
+  margin-left: 1.5rem;
+  border-left: 2px solid #ccc;
+  padding-left: 10px;
+}
+.comment small {
+  color: #666;
+}
+.comment .reply-btn {
+  font-size: 0.9rem;
+  color: #007bff;
+  cursor: pointer;
+}
+.comment .reply-btn:hover {
+  text-decoration: underline;
+}
+.reply-form {
+  margin-top: 8px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // --- Основная форма добавления комментария ---
+  const commentForm = document.getElementById('comment-form');
+  if (commentForm) {
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('comment-text').value.trim();
+      if (!text) return;
+
+      const response = await fetch(commentForm.dataset.article + '/comment/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ text })
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        document.getElementById('comments-container').innerHTML = html;
+        document.getElementById('comment-text').value = '';
+      }
+    });
+  }
+
+  // --- Делегирование кликов на кнопки "Ответить" ---
+  document.body.addEventListener('click', (e) => {
+    if (e.target.classList.contains('reply-btn')) {
+      const commentId = e.target.dataset.comment;
+      toggleReplyForm(commentId);
+    }
+  });
+
+  // --- Обработка отправки формы ответа ---
+  document.body.addEventListener('submit', async (e) => {
+    if (e.target.classList.contains('reply-form')) {
+      e.preventDefault();
+
+      const form = e.target;
+      const text = form.querySelector('textarea').value.trim();
+      const parentId = form.querySelector('[name=parent_id]').value;
+      if (!text) return;
+
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ text, parent_id: parentId })
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        document.getElementById('comments-container').innerHTML = html;
+      }
+    }
+  });
+
+  // --- Функция открытия / закрытия формы ответа ---
+  function toggleReplyForm(commentId) {
+    const container = document.getElementById('reply-container-' + commentId);
+    if (container.innerHTML.trim()) {
+      container.innerHTML = ''; // скрыть
+      return;
+    }
+    container.innerHTML = `
+      <form method="post" action="${window.location.pathname}comment/" class="reply-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
+        <input type="hidden" name="parent_id" value="${commentId}">
+        <div class="input-group mt-2">
+          <textarea name="text" class="form-control" rows="1" placeholder="Ваш ответ..."></textarea>
+          <button type="submit" class="btn btn-outline-success">↩️</button>
+        </div>
+      </form>
+    `;
+  }
+});
+</script>
 {% endblock %}

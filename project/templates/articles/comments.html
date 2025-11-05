@@ -1,0 +1,35 @@
+{% for comment in comments %}
+<div class="comment mb-3" id="comment-{{ comment.id }}">
+  <div class="d-flex justify-content-between">
+    <div>
+      <strong>{{ comment.user.username }}</strong>
+      <small>• {{ comment.created_at|date:"d.m.Y H:i" }}</small>
+    </div>
+    {% if user.is_staff %}
+      <form method="post" action="{% url 'articles:comment_delete' comment.id %}">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-danger">Удалить</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="mt-1">{{ comment.text|linebreaks }}</div>
+
+  {% if user.is_authenticated %}
+  <div class="mt-1">
+    <button type="button" class="btn btn-sm btn-outline-secondary reply-btn" data-comment="{{ comment.id }}">
+      Ответить
+    </button>
+    <div id="reply-container-{{ comment.id }}"></div>
+  </div>
+  {% endif %}
+
+  {% if comment.replies.all %}
+  <div class="reply mt-2 ps-3 border-start border-1">
+    {% include "articles/comments.html" with comments=comment.replies.all only %}
+  </div>
+  {% endif %}
+</div>
+{% empty %}
+<p>Комментариев пока нет.</p>
+{% endfor %}

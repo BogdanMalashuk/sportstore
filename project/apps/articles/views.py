@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Article, Comment
 from .forms import ArticleForm
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 
 
 class ArticleListView(ListView):
@@ -62,6 +64,13 @@ class CommentCreateView(LoginRequiredMixin, View):
                 text=text,
                 parent_id=parent_id if parent_id else None
             )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'articles/comments.html',
+                {'comments': article.comments.filter(parent__isnull=True)},
+                request=request
+            )
+            return HttpResponse(html)
         return redirect(reverse('articles:article', args=[slug]))
 
 
@@ -73,4 +82,12 @@ class CommentDeleteView(UserPassesTestMixin, View):
         comment = get_object_or_404(Comment, pk=pk)
         article_slug = comment.article.slug
         comment.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            article = get_object_or_404(Article, slug=article_slug)
+            html = render_to_string(
+                'articles/comments.html',
+                {'comments': article.comments.filter(parent__isnull=True)},
+                request=request
+            )
+            return HttpResponse(html)
         return redirect(reverse('articles:article', args=[article_slug]))
