@@ -3,11 +3,23 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h1 class="mb-3">{{ article.title }}</h1>
+
+  <!-- Заголовок статьи + кнопки для администратора -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">{{ article.title }}</h1>
+    {% if user.is_staff %}
+    <div>
+      <a href="{% url 'articles:edit' article.slug %}" class="btn btn-warning btn-sm me-2">✏️ Редактировать</a>
+      <button id="delete-article-btn" class="btn btn-danger btn-sm">🗑️ Удалить</button>
+    </div>
+    {% endif %}
+  </div>
+
   <p>{{ article.content|linebreaks }}</p>
 
   <hr>
 
+  <!-- Комментарии -->
   <h4 class="mt-4">Комментарии</h4>
 
   {% if user.is_authenticated %}
@@ -25,11 +37,25 @@
   <div id="comments-container" class="mt-4">
     {% include "articles/comments.html" %}
   </div>
+
 </div>
 
 <style>
-#comments-container { background-color:#fff; border:1px solid #ddd; border-radius:8px; padding:16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-.comment { border-left:4px solid #28a745; padding:12px; margin-bottom:1rem; background-color:#f9f9f9; border-radius:6px; transition:background-color 0.2s ease;}
+#comments-container {
+  background-color:#fff;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+.comment {
+  border-left:4px solid #28a745;
+  padding:12px;
+  margin-bottom:1rem;
+  background-color:#f9f9f9;
+  border-radius:6px;
+  transition:background-color 0.2s ease;
+}
 .comment:hover { background-color:#f1f8f4; }
 .comment small { color:#666; }
 textarea.form-control { resize: vertical; }
@@ -38,8 +64,9 @@ textarea.form-control { resize: vertical; }
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-  const commentForm = document.getElementById('comment-form');
 
+  // --- Добавление комментария через AJAX ---
+  const commentForm = document.getElementById('comment-form');
   if(commentForm){
     commentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -61,6 +88,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const html = await response.text();
         document.getElementById('comments-container').innerHTML = html;
         document.getElementById('comment-text').value = '';
+      }
+    });
+  }
+
+  // --- Удаление статьи через JS confirm ---
+  const deleteBtn = document.getElementById('delete-article-btn');
+  if(deleteBtn){
+    deleteBtn.addEventListener('click', async () => {
+      if(!confirm('Вы уверены, что хотите удалить эту статью?')){
+        return;
+      }
+
+      const url = "{% url 'articles:delete' article.slug %}";
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if(response.ok){
+        // После успешного удаления редирект на список статей
+        window.location.href = "{% url 'articles:articles' %}";
+      } else {
+        alert('Ошибка при удалении статьи!');
       }
     });
   }
