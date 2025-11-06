@@ -21,13 +21,13 @@
       <tr class="clickable-row" data-href="{% url 'shop:product' item.product.id %}">
         <td>{{ item.product.name }}</td>
         <td>{{ item.quantity }}</td>
-        <td>{{ item.buy_price }} ₽</td>
+        <td>{{ item.buy_price }} BYN</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  <h4 class="text-end mt-3">Итого: {{ order.total_price }} ₽</h4>
+  <h4 class="text-end mt-3">Итого: {{ order.total_price }} BYN</h4>
 
   <div class="text-end mt-4">
     <a href="{% url 'shop:products' %}" class="btn btn-primary">Вернуться на главную</a>

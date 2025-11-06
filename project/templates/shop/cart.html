@@ -28,7 +28,7 @@
             <input type="checkbox" name="selected_items" value="{{ item.id }}">
           </td>
           <td>{{ item.product.name }}</td>
-          <td>{{ item.product.price }} ₽</td>
+          <td>{{ item.product.price }} BYN</td>
           <td>
             <div class="d-flex align-items-center">
               <button type="button" class="btn btn-sm btn-outline-secondary update-qty"
@@ -40,7 +40,7 @@
                       data-action="plus" data-item-id="{{ item.id }}">+</button>
             </div>
           </td>
-          <td><span id="item-total-{{ item.id }}">{{ item.get_total_price }}</span> ₽</td>
+          <td><span id="item-total-{{ item.id }}">{{ item.get_total_price }}</span> BYN</td>
           <td>
             <button type="button" class="btn btn-sm btn-danger delete-item-btn" data-item-id="{{ item.id }}">
               Удалить
@@ -52,7 +52,7 @@
     </table>
 
     <div class="d-flex justify-content-between align-items-center mt-4">
-      <h4>Итого: <span id="cart-total">{{ cart_total }}</span> ₽</h4>
+      <h4>Итого: <span id="cart-total">{{ cart_total }}</span> BYN</h4>
       <div>
         <button type="submit" class="btn btn-success">Оформить заказ</button>
       </div>

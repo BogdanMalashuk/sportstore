@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 product = Product.objects.create(
                     name=name,
                     description=desc,
-                    price=random.randint(1000, 6000),
+                    price=random.randint(30, 160),
                     category=category,
                 )
                 products.append(product)

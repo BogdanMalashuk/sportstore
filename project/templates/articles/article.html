@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const html = await response.text();
         document.getElementById('comments-container').innerHTML = html;
         document.getElementById('comment-text').value = '';
+        attachDeleteCommentHandlers(); // Обновляем обработчики кнопок удаления
       }
     });
   }
@@ -110,13 +111,44 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if(response.ok){
-        // После успешного удаления редирект на список статей
         window.location.href = "{% url 'articles:articles' %}";
       } else {
         alert('Ошибка при удалении статьи!');
       }
     });
   }
+
+  // --- Удаление комментариев через AJAX ---
+  function attachDeleteCommentHandlers(){
+    const deleteButtons = document.querySelectorAll('.delete-comment-btn');
+    deleteButtons.forEach(btn => {
+      btn.removeEventListener('click', btn.clickHandler); // избегаем дублирования
+      btn.clickHandler = async function(e){
+        e.preventDefault();
+        if(!confirm('Вы уверены, что хотите удалить комментарий?')) return;
+
+        const url = btn.dataset.url;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if(response.ok){
+          const html = await response.text();
+          document.getElementById('comments-container').innerHTML = html;
+          attachDeleteCommentHandlers(); // повторно привязываем после обновления HTML
+        } else {
+          alert('Ошибка при удалении комментария!');
+        }
+      };
+      btn.addEventListener('click', btn.clickHandler);
+    });
+  }
+
+  attachDeleteCommentHandlers(); // инициализация обработчиков при загрузке страницы
 });
 </script>
 {% endblock %}

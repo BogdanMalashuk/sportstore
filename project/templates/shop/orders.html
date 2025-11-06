@@ -23,7 +23,7 @@
         <tr>
           <td class="fw-semibold text-dark">#{{ order.id }}</td>
           {% if user.is_staff %}<td>{{ order.user.username }}</td>{% endif %}
-          <td>{{ order.total_price }} ₽</td>
+          <td>{{ order.total_price }} BYN</td>
           <td>
             {% if user.is_staff %}
               <select class="form-select order-status" data-order-id="{{ order.id }}">
